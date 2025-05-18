@@ -83,3 +83,47 @@ for(int i:digits){
             }
 ~~~
 这是C++ 11的语法**for(int a:b)**，即从数组b依次取出元素赋值给整型变量a，在一些需要遍历数组但又要记录此时遍历的值出现了几次的时候这样写又简洁又方便！
+
+## 2025.5.18 《LEETCODE T17 电话号码的字母组合》   
+这题与找三位偶数的回溯过程是一样的，本质都是通过回溯进行组合。这题多了一个新东西：**映射**。即输入的是数字字符串，但要组合的是每个数字下代表的字母字符串。解决的方式：一是哈希表（**最好的也是这个，这题因为电话号码的按键数字是连续的，还说用数组也可以，但以后遇到无序的映射呢**），第二是数组（题解代码是数组）。   
+组合类问题通过回溯解决，一定要结合递归树，因为递归树可以确定**递归层数与答案的关系**，如题解中：
+![image](https://github.com/user-attachments/assets/cac33134-a3dc-4fce-a6c1-38a660db6c36)   
+不难看出每一层就是对应的第几个数字背后的字母，于是dfs的退出条件就很好确定。   确定了dfs的退出条件，就要想dfs的主体过程了，以“23”为例，2是“abc”，3是“def”，要递归到“ad”这样的情况才会退出本次dfs，因此对于s=“abc”这一层，肯定要逐个遍历s[1] s[2] s[3]，然后在s[1]的时候进入下一层，要逐个与s=“def”的每一个字符结合。所以主体很好确定：在一个for循环下执行dfs，先将当前的s[j]压入保存此次答案的字符串（**这里很新颖，把string类型可以当作动态数组去处理！**）,然后递归进入下一层（i+1），找到答案后弹出先前压入的s[j]。**此处一开始犯了个错误**，把存每一层字符串的s定义成了成员变量，在进入第二层之后被覆盖成“def”,此时dfs回到第一层是变不回来的（因为s的赋值在for外面），所以**dfs中回溯的变量一定要是局部变量**。完整代码如下（思路来自代码随想录）：   
+~~~cpp
+class Solution {
+private:
+    const string letterMap[10] = {
+        "", // 0
+        "", // 1
+        "abc", // 2
+        "def", // 3
+        "ghi", // 4
+        "jkl", // 5
+        "mno", // 6
+        "pqrs", // 7
+        "tuv", // 8
+        "wxyz", // 9
+    };
+public:
+    vector<string> ans;
+
+    string temp;
+    void dfs(string digits,int i){
+        if(i==digits.length()){
+            ans.push_back(temp);
+            return;
+        }
+        string s=letterMap[digits[i]-'0'];
+        for(int j=0;j<s.length();j++){
+            temp.push_back(s[j]);
+            dfs(digits,i+1);
+            temp.pop_back();
+        }
+    }
+    vector<string> letterCombinations(string digits) {
+        if(digits.length()==0)return {};
+        dfs(digits,0);
+        return ans;
+    }
+};
+~~~
